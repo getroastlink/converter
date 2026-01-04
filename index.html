@@ -234,6 +234,83 @@
             margin-top: 4px;
         }
         
+        .newsletter-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1f2642;
+            border-radius: 8px;
+            border-left: 4px solid #4ea1ff;
+        }
+        
+        .newsletter-section h3 {
+            color: #e8eaf2;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .newsletter-description {
+            color: #9aa4bf;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        
+        .newsletter-form {
+            margin: 0;
+        }
+        
+        .newsletter-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .newsletter-input-group input[type="email"] {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #252b45;
+            border-radius: 6px;
+            background: #252b45;
+            color: #e8eaf2;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .newsletter-input-group input[type="email"]:focus {
+            outline: none;
+            border-color: #4ea1ff;
+        }
+        
+        .newsletter-input-group input[type="email"]::placeholder {
+            color: #6b7280;
+        }
+        
+        .newsletter-button {
+            padding: 10px 20px;
+            background: #4ea1ff;
+            color: #0f1220;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+        
+        .newsletter-button:hover {
+            background: #5eb3ff;
+        }
+        
+        @media (max-width: 480px) {
+            .newsletter-input-group {
+                flex-direction: column;
+            }
+            
+            .newsletter-button {
+                width: 100%;
+            }
+        }
+        
         .examples {
             background: #1f2642;
             padding: 15px;
@@ -303,6 +380,27 @@
         </button>
         
         <div id="status" class="status"></div>
+        
+        <!-- Newsletter Signup -->
+        <div class="newsletter-section">
+            <h3>Get RoastLink Updates</h3>
+            <p class="newsletter-description">Subscribe updates and product news</p>
+            
+            <form class="newsletter-form" action="https://assets.mailerlite.com/jsonp/2015844/forms/175633197006062847/subscribe" method="post" target="_blank">
+                <div class="newsletter-input-group">
+                    <input 
+                        type="email" 
+                        name="fields[email]" 
+                        placeholder="your@email.com" 
+                        required
+                        aria-label="email"
+                    >
+                    <button type="submit" class="newsletter-button">Subscribe</button>
+                </div>
+                <input type="hidden" name="ml-submit" value="1">
+                <input type="hidden" name="anticsrf" value="true">
+            </form>
+        </div>
         
         <div class="footer">
             <p><a href="https://roastlink.com" target="_blank">RoastLink</a> - Temperature Logging for Coffee Roasters</p>
