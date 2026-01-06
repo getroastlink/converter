@@ -72,7 +72,8 @@
             font-size: 14px;
         }
         
-        input[type="text"] {
+        input[type="text"],
+        select {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #1f2642;
@@ -87,16 +88,44 @@
             color: #6b7280;
         }
         
-        input[type="text"]:focus {
+        input[type="text"]:focus,
+        select:focus {
             outline: none;
             border-color: #4ea1ff;
             background: #252b45;
+        }
+        
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234ea1ff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        
+        select option {
+            background: #1a1f36;
+            color: #e8eaf2;
         }
         
         .hint {
             color: #6b7280;
             font-size: 12px;
             margin-top: 6px;
+        }
+        
+        .coming-soon-badge {
+            display: inline-block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .checkbox-group {
@@ -347,14 +376,25 @@
 <body>
     <div class="container">
         <h1><a href="https://roastlink.com" target="_blank">RoastLink Converter</a></h1>
-        <p class="subtitle">Roast.World → Artisan CSV</p>
+        <p class="subtitle">Convert roast profiles to Artisan CSV</p>
         
         <div class="examples">
-            <div class="examples-title">📝 Input Examples:</div>
+            <div class="examples-title">📝 Example Roast ID:</div>
             <div class="examples-list">
-                • Roast ID: <code>0QQFP4AFGdZC34Il64oPQ</code><br>
-                • Full URL: <code>https://roast.world/user/roasts/0QQFP4AFGdZC34Il64oPQ</code>
+                <code>0QQFP4AFGdZC34Il64oPQ</code>
             </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="sourcePlatform">Source Platform</label>
+            <select id="sourcePlatform">
+                <option value="roastworld">Roast.World</option>
+                <!-- Add more platforms here:
+                <option value="artisan">Artisan Profile</option>
+                <option value="cropster">Cropster</option>
+                -->
+            </select>
+            <div class="hint">More platforms coming soon</div>
         </div>
         
         <div class="input-group">
@@ -362,8 +402,8 @@
             <input 
                 type="text" 
                 id="roastInput" 
-                placeholder="ID or full URL"
-                value=""
+                placeholder="0QQFP4AFGdZC34Il64oPQ or full URL"
+                value="0QQFP4AFGdZC34Il64oPQ"
             >
             <div class="hint">Enter a roast.world ID or paste the full URL</div>
         </div>
