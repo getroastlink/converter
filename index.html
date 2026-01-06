@@ -330,6 +330,36 @@
             background: #5eb3ff;
         }
         
+        .newsletter-status {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+        
+        .newsletter-status.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .newsletter-status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .newsletter-status.loading {
+            display: block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            border: 1px solid rgba(78, 161, 255, 0.2);
+        }
+        
         @media (max-width: 480px) {
             .newsletter-input-group {
                 flex-direction: column;
@@ -402,8 +432,8 @@
             <input 
                 type="text" 
                 id="roastInput" 
-                placeholder="0QQFP4AFGdZC34Il64oPQ or full URL"
-                value="0QQFP4AFGdZC34Il64oPQ"
+                placeholder=""
+                value=""
             >
             <div class="hint">Enter a roast.world ID or paste the full URL</div>
         </div>
@@ -411,7 +441,7 @@
         <div class="checkbox-group">
             <label>
                 <input type="checkbox" id="swapTemps">
-                Swap ET/BT
+                Use default mapping (ET=Drum, BT=Bean)
             </label>
         </div>
         
@@ -422,24 +452,25 @@
         <div id="status" class="status"></div>
         
         <!-- Newsletter Signup -->
-        <div class="newsletter-section">
+        <div class="newsletter-section" id="newsletterSection">
             <h3>Get RoastLink Updates</h3>
             <p class="newsletter-description">Subscribe to receive updates and product news!</p>
             
-            <form class="newsletter-form" action="https://assets.mailerlite.com/jsonp/2015844/forms/175633197006062847/subscribe" method="post" target="_blank">
+            <form class="newsletter-form" id="newsletterForm" onsubmit="return handleNewsletterSubmit(event)">
                 <div class="newsletter-input-group">
                     <input 
                         type="email" 
+                        id="newsletterEmail"
                         name="fields[email]" 
                         placeholder="your@email.com" 
                         required
                         aria-label="email"
                     >
-                    <button type="submit" class="newsletter-button">Subscribe</button>
+                    <button type="submit" class="newsletter-button" id="newsletterBtn">Subscribe</button>
                 </div>
-                <input type="hidden" name="ml-submit" value="1">
-                <input type="hidden" name="anticsrf" value="true">
             </form>
+            
+            <div id="newsletterStatus" class="newsletter-status"></div>
         </div>
         
         <div class="footer">
@@ -614,9 +645,10 @@
                         event = 'Drop';
                     }
                     
-                    // Swap temps if requested
-                    const etTemp = swapTemps ? btF : drumF;
-                    const btTemp = swapTemps ? drumF : btF;
+                    // Default: ET=Bean, BT=Drum (inverted from roast.world)
+                    // If checkbox is checked, use original: ET=Drum, BT=Bean
+                    const etTemp = swapTemps ? drumF : btF;
+                    const btTemp = swapTemps ? btF : drumF;
                     
                     csvLines.push(`${timeStr}\t${timeStr}\t${etTemp.toFixed(1)}\t${btTemp.toFixed(1)}\t${event}`);
                 }
@@ -658,6 +690,59 @@
                 convertRoast();
             }
         });
+        
+        // Newsletter form handler
+        async function handleNewsletterSubmit(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('newsletterForm');
+            const email = document.getElementById('newsletterEmail').value;
+            const statusDiv = document.getElementById('newsletterStatus');
+            const submitBtn = document.getElementById('newsletterBtn');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Subscribing...';
+            statusDiv.className = 'newsletter-status loading';
+            statusDiv.textContent = 'Processing...';
+            
+            try {
+                // Submit to MailerLite
+                const formData = new FormData();
+                formData.append('fields[email]', email);
+                formData.append('ml-submit', '1');
+                formData.append('anticsrf', 'true');
+                
+                const response = await fetch('https://assets.mailerlite.com/jsonp/2015844/forms/175633197006062847/subscribe', {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' // MailerLite doesn't support CORS, but submission still works
+                });
+                
+                // Since we're using no-cors, we can't read the response
+                // But if we got here, the request was sent successfully
+                statusDiv.className = 'newsletter-status success';
+                statusDiv.textContent = '✓ Thank you for subscribing! Check your email to confirm.';
+                
+                // Clear the form
+                form.reset();
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Subscribe';
+                }, 3000);
+                
+            } catch (error) {
+                statusDiv.className = 'newsletter-status error';
+                statusDiv.textContent = '✗ Something went wrong. Please try again.';
+                
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Subscribe';
+            }
+            
+            return false;
+        }
     </script>
 </body>
 </html>
