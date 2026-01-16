@@ -433,7 +433,7 @@
                 type="text" 
                 id="roastInput" 
                 placeholder=""
-                value=""
+                value="0QQFP4AFGdZC34Il64oPQ"
             >
             <div class="hint">Enter a roast.world ID or paste the full URL</div>
         </div>
@@ -441,7 +441,7 @@
         <div class="checkbox-group">
             <label>
                 <input type="checkbox" id="swapTemps">
-                Swap ET/BT
+                Use default mapping (ET=Drum, BT=Bean)
             </label>
         </div>
         
@@ -581,14 +581,15 @@
                 const weightIn = roastData.weightGreen;
                 const weightOut = roastData.weightRoasted;
                 const roastName = roastData.roastName || 'Roast';
+                const totalRoastTime = roastData.totalRoastTime; // Actual roast duration in seconds
                 
                 // Detect duplicate samples
                 const hasDuplicates = detectDuplicateSamples(drumTemps);
-                const effectiveSampleRate = hasDuplicates ? 1.0 : sampleRate;
                 
                 // Extract temperature arrays
                 let btArray, drumArray;
                 if (hasDuplicates) {
+                    // Take every other sample to remove duplicates
                     btArray = btTemps.filter((_, i) => i >= roastStartIdx && (i - roastStartIdx) % 2 === 0);
                     drumArray = drumTemps.filter((_, i) => i >= roastStartIdx && (i - roastStartIdx) % 2 === 0);
                 } else {
@@ -600,10 +601,16 @@
                 btArray = btArray.slice(0, numPoints);
                 drumArray = drumArray.slice(0, numPoints);
                 
-                const totalTime = (numPoints - 1) * effectiveSampleRate;
+                // Calculate actual sample rate from metadata
+                // Use totalRoastTime from roast.world which is the ACTUAL duration
+                const actualSampleRate = totalRoastTime / (numPoints - 1);
+                
+                const totalTime = totalRoastTime; // Use metadata, not calculated
+                
+                // Calculate first crack time
                 const firstCrackTime = hasDuplicates 
-                    ? Math.floor((firstCrackIdx - roastStartIdx) / 2) * effectiveSampleRate
-                    : (firstCrackIdx - roastStartIdx) * effectiveSampleRate;
+                    ? Math.floor((firstCrackIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (firstCrackIdx - roastStartIdx) * actualSampleRate;
                 
                 // Build CSV
                 const csvLines = [];
@@ -631,7 +638,7 @@
                 
                 // Data rows
                 for (let i = 0; i < numPoints; i++) {
-                    const t = i * effectiveSampleRate;
+                    const t = i * actualSampleRate;
                     const btF = celsiusToFahrenheit(btArray[i]);
                     const drumF = celsiusToFahrenheit(drumArray[i]);
                     const timeStr = formatTime(t);
@@ -639,7 +646,7 @@
                     let event = '';
                     if (i === 0) {
                         event = 'Charge';
-                    } else if (firstCrackTime > 0 && Math.abs(t - firstCrackTime) < effectiveSampleRate) {
+                    } else if (firstCrackTime > 0 && Math.abs(t - firstCrackTime) < actualSampleRate) {
                         event = 'FCs';
                     } else if (i === numPoints - 1) {
                         event = 'Drop';
@@ -670,8 +677,9 @@
                         Duration: ${formatTime(totalTime)} (${Math.floor(totalTime)}s)<br>
                         First Crack: ${formatTime(firstCrackTime)}<br>
                         Weight: ${weightIn}g → ${weightOut}g (${weightLoss}% loss)<br>
-                        Sample Rate: ${effectiveSampleRate}s<br>
-                        ${swapTemps ? 'ET=Bean, BT=Drum (swapped)' : 'ET=Drum, BT=Bean (default)'}
+                        Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
+                        Total Points: ${numPoints}<br>
+                        ${swapTemps ? 'Mapping: ET=Drum, BT=Bean' : 'Mapping: ET=Bean, BT=Drum (default)'}
                     </div>
                 `;
                 
@@ -722,7 +730,7 @@
                 // Since we're using no-cors, we can't read the response
                 // But if we got here, the request was sent successfully
                 statusDiv.className = 'newsletter-status success';
-                statusDiv.textContent = '✓ Thank you for subscribing!';
+                statusDiv.textContent = '✓ Thank you for subscribing! Check your email to confirm.';
                 
                 // Clear the form
                 form.reset();
