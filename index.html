@@ -684,8 +684,8 @@
                     
                     // Default: ET=Bean, BT=Drum (inverted from roast.world)
                     // If checkbox is checked, use original: ET=Drum, BT=Bean
-                    const etTemp = swapTemps ? drumF : btF;
-                    const btTemp = swapTemps ? btF : drumF;
+                    const etTemp = swapTemps ? btF : drumF;
+                    const btTemp = swapTemps ? drumF : btF;
                     
                     csvLines.push(`${timeStr}\t${timeStr}\t${etTemp.toFixed(1)}\t${btTemp.toFixed(1)}\t${event}`);
                 }
