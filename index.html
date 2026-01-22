@@ -586,14 +586,15 @@
             }
             
             // Create timeindex array [CHARGE, DRY, FCs, FCe, SCs, SCe, DROP, COOL]
+            // CRITICAL: timeindex contains INDICES into timex array, NOT absolute seconds!
             const timeindex = [
-                0,  // CHARGE always at start
-                yellowingTime > 0 ? Math.round(yellowingTime) : 0,
-                Math.round(firstCrackTime),
-                firstCrackEndTime > 0 ? Math.round(firstCrackEndTime) : 0,
-                secondCrackStartTime > 0 ? Math.round(secondCrackStartTime) : 0,
-                secondCrackEndTime > 0 ? Math.round(secondCrackEndTime) : 0,
-                Math.round(totalTime),
+                0,  // CHARGE always at start (index 0)
+                yellowingTime > 0 ? Math.round(yellowingTime / actualSampleRate) : 0,
+                Math.round(firstCrackTime / actualSampleRate),
+                firstCrackEndTime > 0 ? Math.round(firstCrackEndTime / actualSampleRate) : 0,
+                secondCrackStartTime > 0 ? Math.round(secondCrackStartTime / actualSampleRate) : 0,
+                secondCrackEndTime > 0 ? Math.round(secondCrackEndTime / actualSampleRate) : 0,
+                numPoints - 1,  // DROP at last index
                 0   // COOL not set
             ];
             
@@ -1063,7 +1064,7 @@
                 // Since we're using no-cors, we can't read the response
                 // But if we got here, the request was sent successfully
                 statusDiv.className = 'newsletter-status success';
-                statusDiv.textContent = '✓ Thank you for subscribing!';
+                statusDiv.textContent = '✓ Thank you for subscribing! Check your email to confirm.';
                 
                 // Clear the form
                 form.reset();
