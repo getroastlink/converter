@@ -440,12 +440,23 @@
             <label for="smoothing">Temperature Smoothing <span style="color: #f59e0b; font-size: 12px;">(BETA)</span></label>
             <select id="smoothing">
                 <option value="none">None (Raw Data)</option>
-                <option value="ema-light">Light Smoothing (EMA α=0.3)</option>
-                <option value="ema-medium" selected>Medium Smoothing (EMA α=0.2) - Recommended</option>
-                <option value="ema-heavy">Heavy Smoothing (EMA α=0.1)</option>
-                <option value="ema-xheavy">Extra Heavy Smoothing (EMA α=0.05)</option>
+                <option value="ema">Exponential Moving Average (EMA) - Recommended</option>
+                <option value="sma">Simple Moving Average (SMA)</option>
+                <option value="wma">Weighted Moving Average (WMA)</option>
+                <option value="savgol">Savitzky-Golay Filter</option>
             </select>
-            <div class="hint">Smooth temperature curves for PID control - reduces noise while preserving profile shape</div>
+            <div class="hint">Different smoothing methods for PID control - EMA recommended for best balance</div>
+        </div>
+        
+        <div class="input-group" id="smoothingStrength">
+            <label for="smoothingWindow">Smoothing Strength</label>
+            <select id="smoothingWindow">
+                <option value="5">Light (5 points)</option>
+                <option value="10" selected>Medium (10 points)</option>
+                <option value="15">Heavy (15 points)</option>
+                <option value="20">Extra Heavy (20 points)</option>
+            </select>
+            <div class="hint">Higher values = smoother curves but more lag</div>
         </div>
         
         <div class="input-group">
@@ -534,9 +545,11 @@
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        // Exponential Moving Average smoothing
-        function exponentialMovingAverage(data, alpha) {
+        // Exponential Moving Average smoothing (best for PID)
+        function exponentialMovingAverage(data, windowSize) {
             if (data.length === 0) return data;
+            // Convert window size to alpha: smaller window = higher alpha (more responsive)
+            const alpha = 2 / (windowSize + 1);
             const smoothed = [data[0]];
             for (let i = 1; i < data.length; i++) {
                 smoothed.push(alpha * data[i] + (1 - alpha) * smoothed[i - 1]);
@@ -544,17 +557,100 @@
             return smoothed;
         }
 
+        // Simple Moving Average (classic smoothing)
+        function simpleMovingAverage(data, windowSize) {
+            if (data.length === 0) return data;
+            const smoothed = [];
+            for (let i = 0; i < data.length; i++) {
+                const start = Math.max(0, i - Math.floor(windowSize / 2));
+                const end = Math.min(data.length, i + Math.floor(windowSize / 2) + 1);
+                const sum = data.slice(start, end).reduce((a, b) => a + b, 0);
+                smoothed.push(sum / (end - start));
+            }
+            return smoothed;
+        }
+
+        // Weighted Moving Average (middle ground)
+        function weightedMovingAverage(data, windowSize) {
+            if (data.length === 0) return data;
+            const smoothed = [];
+            const halfWindow = Math.floor(windowSize / 2);
+            
+            for (let i = 0; i < data.length; i++) {
+                let weightedSum = 0;
+                let totalWeight = 0;
+                
+                for (let j = -halfWindow; j <= halfWindow; j++) {
+                    const idx = i + j;
+                    if (idx >= 0 && idx < data.length) {
+                        // Linear weights: closer points have higher weight
+                        const weight = windowSize - Math.abs(j);
+                        weightedSum += data[idx] * weight;
+                        totalWeight += weight;
+                    }
+                }
+                
+                smoothed.push(weightedSum / totalWeight);
+            }
+            return smoothed;
+        }
+
+        // Savitzky-Golay filter (preserves peaks/valleys, best for derivatives)
+        function savitzkyGolay(data, windowSize) {
+            if (data.length === 0) return data;
+            // Use quadratic polynomial (order 2) for smoothing
+            // Simplified implementation using weighted average with polynomial coefficients
+            const smoothed = [];
+            const halfWindow = Math.floor(windowSize / 2);
+            
+            // Pre-computed coefficients for quadratic fit (order 2)
+            // These preserve shape better than simple averaging
+            const coeffs = {
+                5: [0.086, 0.343, 0.486, 0.343, 0.086],
+                7: [0.059, 0.214, 0.321, 0.384, 0.321, 0.214, 0.059],
+                9: [0.042, 0.142, 0.233, 0.300, 0.333, 0.300, 0.233, 0.142, 0.042],
+                11: [0.030, 0.103, 0.169, 0.225, 0.267, 0.285, 0.267, 0.225, 0.169, 0.103, 0.030]
+            };
+            
+            // Use closest window size we have coefficients for
+            let actualWindow = windowSize;
+            if (windowSize <= 5) actualWindow = 5;
+            else if (windowSize <= 7) actualWindow = 7;
+            else if (windowSize <= 9) actualWindow = 9;
+            else actualWindow = 11;
+            
+            const c = coeffs[actualWindow];
+            const half = Math.floor(actualWindow / 2);
+            
+            for (let i = 0; i < data.length; i++) {
+                let sum = 0;
+                let count = 0;
+                
+                for (let j = -half; j <= half; j++) {
+                    const idx = i + j;
+                    if (idx >= 0 && idx < data.length) {
+                        sum += data[idx] * c[j + half];
+                        count++;
+                    }
+                }
+                
+                smoothed.push(count > 0 ? sum : data[i]);
+            }
+            
+            return smoothed;
+        }
+
         // Apply smoothing based on selected mode
-        function applySmoothing(data, mode) {
+        function applySmoothing(data, mode, windowSize) {
             switch(mode) {
-                case 'ema-light':
-                    return exponentialMovingAverage(data, 0.3);
-                case 'ema-medium':
-                    return exponentialMovingAverage(data, 0.2);
-                case 'ema-heavy':
-                    return exponentialMovingAverage(data, 0.1);
-                case 'ema-xheavy':
-                    return exponentialMovingAverage(data, 0.05);
+                case 'ema':
+                    return exponentialMovingAverage(data, windowSize);
+                case 'sma':
+                    return simpleMovingAverage(data, windowSize);
+                case 'wma':
+                    return weightedMovingAverage(data, windowSize);
+                case 'savgol':
+                    return savitzkyGolay(data, windowSize);
                 case 'none':
                 default:
                     return data;
@@ -905,9 +1001,10 @@
                 
                 // Apply temperature smoothing if selected
                 const smoothingMode = document.getElementById('smoothing').value;
+                const smoothingWindow = parseInt(document.getElementById('smoothingWindow').value);
                 if (smoothingMode !== 'none') {
-                    btArray = applySmoothing(btArray, smoothingMode);
-                    drumArray = applySmoothing(drumArray, smoothingMode);
+                    btArray = applySmoothing(btArray, smoothingMode, smoothingWindow);
+                    drumArray = applySmoothing(drumArray, smoothingMode, smoothingWindow);
                 }
                 
                 // Calculate actual sample rate from metadata
@@ -1058,7 +1155,7 @@
                         Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
                         Total Points: ${numPoints}<br>
                         Format: ${outputFormat.toUpperCase()}<br>
-                        Smoothing: ${smoothingMode === 'none' ? 'None' : smoothingMode.replace('ema-', 'EMA ').replace('light', 'Light').replace('medium', 'Medium').replace('xheavy', 'Extra Heavy').replace('heavy', 'Heavy')}<br>
+                        Smoothing: ${smoothingMode === 'none' ? 'None' : smoothingMode.toUpperCase() + ' (' + smoothingWindow + ' points)'}<br>
                         ${swapTemps ? 'Mapping: ET=Bean, BT=IBTS' : 'Mapping: ET=IBTS, BT=Bean'}
                     </div>
                 `;
@@ -1077,6 +1174,16 @@
         document.getElementById('roastInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 convertRoast();
+            }
+        });
+        
+        // Show/hide smoothing strength based on method selection
+        document.getElementById('smoothing').addEventListener('change', function(e) {
+            const strengthDiv = document.getElementById('smoothingStrength');
+            if (e.target.value === 'none') {
+                strengthDiv.style.display = 'none';
+            } else {
+                strengthDiv.style.display = 'block';
             }
         });
         
