@@ -437,6 +437,17 @@
         </div>
         
         <div class="input-group">
+            <label for="smoothing">Temperature Smoothing <span style="color: #f59e0b; font-size: 12px;">(BETA)</span></label>
+            <select id="smoothing">
+                <option value="none">None (Raw Data)</option>
+                <option value="ema-light">Light Smoothing (EMA α=0.3)</option>
+                <option value="ema-medium" selected>Medium Smoothing (EMA α=0.2) - Recommended</option>
+                <option value="ema-heavy">Heavy Smoothing (EMA α=0.15)</option>
+            </select>
+            <div class="hint">Smooth temperature curves for PID control - reduces noise while preserving profile shape</div>
+        </div>
+        
+        <div class="input-group">
             <label for="roastInput">Roast ID or URL</label>
             <input 
                 type="text" 
@@ -520,6 +531,31 @@
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Exponential Moving Average smoothing
+        function exponentialMovingAverage(data, alpha) {
+            if (data.length === 0) return data;
+            const smoothed = [data[0]];
+            for (let i = 1; i < data.length; i++) {
+                smoothed.push(alpha * data[i] + (1 - alpha) * smoothed[i - 1]);
+            }
+            return smoothed;
+        }
+
+        // Apply smoothing based on selected mode
+        function applySmoothing(data, mode) {
+            switch(mode) {
+                case 'ema-light':
+                    return exponentialMovingAverage(data, 0.3);
+                case 'ema-medium':
+                    return exponentialMovingAverage(data, 0.2);
+                case 'ema-heavy':
+                    return exponentialMovingAverage(data, 0.15);
+                case 'none':
+                default:
+                    return data;
+            }
         }
 
         // Show status message
@@ -864,6 +900,13 @@
                 btArray = btArray.slice(0, numPoints);
                 drumArray = drumArray.slice(0, numPoints);
                 
+                // Apply temperature smoothing if selected
+                const smoothingMode = document.getElementById('smoothing').value;
+                if (smoothingMode !== 'none') {
+                    btArray = applySmoothing(btArray, smoothingMode);
+                    drumArray = applySmoothing(drumArray, smoothingMode);
+                }
+                
                 // Calculate actual sample rate from metadata
                 // Use totalRoastTime from roast.world which is the ACTUAL duration
                 const actualSampleRate = totalRoastTime / (numPoints - 1);
@@ -1012,6 +1055,7 @@
                         Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
                         Total Points: ${numPoints}<br>
                         Format: ${outputFormat.toUpperCase()}<br>
+                        Smoothing: ${smoothingMode === 'none' ? 'None' : smoothingMode.replace('ema-', 'EMA ').replace('light', 'Light').replace('medium', 'Medium').replace('heavy', 'Heavy')}<br>
                         ${swapTemps ? 'Mapping: ET=Bean, BT=IBTS' : 'Mapping: ET=IBTS, BT=Bean'}
                     </div>
                 `;
