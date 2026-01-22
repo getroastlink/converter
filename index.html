@@ -441,7 +441,7 @@
         <div class="checkbox-group">
             <label>
                 <input type="checkbox" id="swapTemps">
-                Swap ET <-> BT)
+                Swap ET <-> BT
             </label>
         </div>
         
@@ -578,6 +578,10 @@
                 const sampleRate = roastData.sampleRate;
                 const roastStartIdx = roastData.roastStartIndex;
                 const firstCrackIdx = roastData.indexFirstCrackStart || 0;
+                const yellowingIdx = roastData.indexYellowingStart || 0;
+                const firstCrackEndIdx = roastData.indexFirstCrackEnd || 0;
+                const secondCrackStartIdx = roastData.indexSecondCrackStart || 0;
+                const secondCrackEndIdx = roastData.indexSecondCrackEnd || 0;
                 const weightIn = roastData.weightGreen;
                 const weightOut = roastData.weightRoasted;
                 const roastName = roastData.roastName || 'Roast';
@@ -609,10 +613,34 @@
                 
                 const totalTime = totalRoastTime; // Use metadata, not calculated
                 
-                // Calculate first crack time
+                // Calculate all roast marker times using the same method
                 const firstCrackTime = hasDuplicates 
                     ? Math.floor((firstCrackIdx - roastStartIdx) / 2) * actualSampleRate
                     : (firstCrackIdx - roastStartIdx) * actualSampleRate;
+                
+                const yellowingTime = (yellowingIdx > 0 && hasDuplicates)
+                    ? Math.floor((yellowingIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (yellowingIdx > 0)
+                    ? (yellowingIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const firstCrackEndTime = (firstCrackEndIdx > 0 && hasDuplicates)
+                    ? Math.floor((firstCrackEndIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (firstCrackEndIdx > 0)
+                    ? (firstCrackEndIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const secondCrackStartTime = (secondCrackStartIdx > 0 && hasDuplicates)
+                    ? Math.floor((secondCrackStartIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (secondCrackStartIdx > 0)
+                    ? (secondCrackStartIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const secondCrackEndTime = (secondCrackEndIdx > 0 && hasDuplicates)
+                    ? Math.floor((secondCrackEndIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (secondCrackEndIdx > 0)
+                    ? (secondCrackEndIdx - roastStartIdx) * actualSampleRate
+                    : 0;
                 
                 // Build CSV
                 const csvLines = [];
@@ -624,11 +652,11 @@
                     `Unit:F\t` +
                     `CHARGE:00:00\t` +
                     `TP:\t` +
-                    `DRYe:\t` +
+                    `DRYe:${yellowingTime > 0 ? formatTime(yellowingTime) : ''}\t` +
                     `FCs:${formatTime(firstCrackTime)}\t` +
-                    `FCe:\t` +
-                    `SCs:\t` +
-                    `SCe:\t` +
+                    `FCe:${firstCrackEndTime > 0 ? formatTime(firstCrackEndTime) : ''}\t` +
+                    `SCs:${secondCrackStartTime > 0 ? formatTime(secondCrackStartTime) : ''}\t` +
+                    `SCe:${secondCrackEndTime > 0 ? formatTime(secondCrackEndTime) : ''}\t` +
                     `DROP:${formatTime(totalTime)}\t` +
                     `COOL:\t` +
                     `Time:00:00\t` +
@@ -677,7 +705,9 @@
                     <div class="roast-info">
                         <strong>${roastName}</strong><br>
                         Duration: ${formatTime(totalTime)} (${Math.floor(totalTime)}s)<br>
-                        First Crack: ${formatTime(firstCrackTime)}<br>
+                        ${yellowingTime > 0 ? `Yellowing: ${formatTime(yellowingTime)}<br>` : ''}
+                        First Crack: ${formatTime(firstCrackTime)}${firstCrackEndTime > 0 ? ` - ${formatTime(firstCrackEndTime)}` : ''}<br>
+                        ${secondCrackStartTime > 0 ? `Second Crack: ${formatTime(secondCrackStartTime)}${secondCrackEndTime > 0 ? ` - ${formatTime(secondCrackEndTime)}` : ''}<br>` : ''}
                         Weight: ${weightIn}g → ${weightOut}g (${weightLoss}% loss)<br>
                         Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
                         Total Points: ${numPoints}<br>
