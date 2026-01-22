@@ -701,17 +701,37 @@
                 
                 // Show success
                 const weightLoss = ((weightIn - weightOut) / weightIn * 100).toFixed(1);
+                
+                // Get temperatures at key events
+                const getTempsAtTime = (targetTime) => {
+                    const targetIndex = Math.round(targetTime / actualSampleRate);
+                    if (targetIndex >= 0 && targetIndex < numPoints) {
+                        const beanTemp = celsiusToFahrenheit(btArray[targetIndex]);
+                        const drumTemp = celsiusToFahrenheit(drumArray[targetIndex]);
+                        return { bean: beanTemp, drum: drumTemp };
+                    }
+                    return null;
+                };
+                
+                const yellowingTemps = yellowingTime > 0 ? getTempsAtTime(yellowingTime) : null;
+                const fcStartTemps = getTempsAtTime(firstCrackTime);
+                const fcEndTemps = firstCrackEndTime > 0 ? getTempsAtTime(firstCrackEndTime) : null;
+                const scStartTemps = secondCrackStartTime > 0 ? getTempsAtTime(secondCrackStartTime) : null;
+                const scEndTemps = secondCrackEndTime > 0 ? getTempsAtTime(secondCrackEndTime) : null;
+                const dropTemps = getTempsAtTime(totalTime);
+                
                 const roastInfo = `
                     <div class="roast-info">
                         <strong>${roastName}</strong><br>
                         Duration: ${formatTime(totalTime)} (${Math.floor(totalTime)}s)<br>
-                        ${yellowingTime > 0 ? `Yellowing: ${formatTime(yellowingTime)}<br>` : ''}
-                        First Crack: ${formatTime(firstCrackTime)}${firstCrackEndTime > 0 ? ` - ${formatTime(firstCrackEndTime)}` : ''}<br>
-                        ${secondCrackStartTime > 0 ? `Second Crack: ${formatTime(secondCrackStartTime)}${secondCrackEndTime > 0 ? ` - ${formatTime(secondCrackEndTime)}` : ''}<br>` : ''}
+                        ${yellowingTime > 0 && yellowingTemps ? `Yellowing: ${formatTime(yellowingTime)} (Bean: ${yellowingTemps.bean.toFixed(1)}°F, IBTS: ${yellowingTemps.drum.toFixed(1)}°F)<br>` : ''}
+                        First Crack: ${formatTime(firstCrackTime)} (Bean: ${fcStartTemps.bean.toFixed(1)}°F, IBTS: ${fcStartTemps.drum.toFixed(1)}°F)${firstCrackEndTime > 0 && fcEndTemps ? ` - ${formatTime(firstCrackEndTime)} (Bean: ${fcEndTemps.bean.toFixed(1)}°F, IBTS: ${fcEndTemps.drum.toFixed(1)}°F)` : ''}<br>
+                        ${secondCrackStartTime > 0 && scStartTemps ? `Second Crack: ${formatTime(secondCrackStartTime)} (Bean: ${scStartTemps.bean.toFixed(1)}°F, IBTS: ${scStartTemps.drum.toFixed(1)}°F)${secondCrackEndTime > 0 && scEndTemps ? ` - ${formatTime(secondCrackEndTime)} (Bean: ${scEndTemps.bean.toFixed(1)}°F, IBTS: ${scEndTemps.drum.toFixed(1)}°F)` : ''}<br>` : ''}
+                        Drop: ${formatTime(totalTime)} (Bean: ${dropTemps.bean.toFixed(1)}°F, IBTS: ${dropTemps.drum.toFixed(1)}°F)<br>
                         Weight: ${weightIn}g → ${weightOut}g (${weightLoss}% loss)<br>
                         Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
                         Total Points: ${numPoints}<br>
-                        ${swapTemps ? 'Mapping: ET=Drum, BT=Bean' : 'Mapping: ET=Bean, BT=Drum (default)'}
+                        ${swapTemps ? 'Mapping: ET=IBTS, BT=Bean' : 'Mapping: ET=Bean, BT=IBTS'}
                     </div>
                 `;
                 
