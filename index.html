@@ -442,7 +442,8 @@
                 <option value="none">None (Raw Data)</option>
                 <option value="ema-light">Light Smoothing (EMA α=0.3)</option>
                 <option value="ema-medium" selected>Medium Smoothing (EMA α=0.2) - Recommended</option>
-                <option value="ema-heavy">Heavy Smoothing (EMA α=0.15)</option>
+                <option value="ema-heavy">Heavy Smoothing (EMA α=0.1)</option>
+                <option value="ema-xheavy">Extra Heavy Smoothing (EMA α=0.05)</option>
             </select>
             <div class="hint">Smooth temperature curves for PID control - reduces noise while preserving profile shape</div>
         </div>
@@ -551,7 +552,9 @@
                 case 'ema-medium':
                     return exponentialMovingAverage(data, 0.2);
                 case 'ema-heavy':
-                    return exponentialMovingAverage(data, 0.15);
+                    return exponentialMovingAverage(data, 0.1);
+                case 'ema-xheavy':
+                    return exponentialMovingAverage(data, 0.05);
                 case 'none':
                 default:
                     return data;
@@ -1055,7 +1058,7 @@
                         Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
                         Total Points: ${numPoints}<br>
                         Format: ${outputFormat.toUpperCase()}<br>
-                        Smoothing: ${smoothingMode === 'none' ? 'None' : smoothingMode.replace('ema-', 'EMA ').replace('light', 'Light').replace('medium', 'Medium').replace('heavy', 'Heavy')}<br>
+                        Smoothing: ${smoothingMode === 'none' ? 'None' : smoothingMode.replace('ema-', 'EMA ').replace('light', 'Light').replace('medium', 'Medium').replace('xheavy', 'Extra Heavy').replace('heavy', 'Heavy')}<br>
                         ${swapTemps ? 'Mapping: ET=Bean, BT=IBTS' : 'Mapping: ET=IBTS, BT=Bean'}
                     </div>
                 `;
