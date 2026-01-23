@@ -440,10 +440,10 @@
             <label for="smoothing">Temperature Smoothing <span style="color: #f59e0b; font-size: 12px;">(BETA)</span></label>
             <select id="smoothing">
                 <option value="none">None (Raw Data)</option>
-                <option value="ema-light">Light Smoothing (EMA α=0.3)</option>
-                <option value="ema-medium" selected>Medium Smoothing (EMA α=0.2) - Recommended</option>
-                <option value="ema-heavy">Heavy Smoothing (EMA α=0.1)</option>
-                <option value="ema-xheavy">Extra Heavy Smoothing (EMA α=0.05)</option>
+                <option value="ema-light">Light Smoothing (EMA α=0.05)</option>
+                <option value="ema-medium" selected>Medium Smoothing (EMA α=0.02)</option>
+                <option value="ema-heavy">Heavy Smoothing (EMA α=0.01)</option>
+                <option value="ema-xheavy">Extra Heavy Smoothing (EMA α=0.005)</option>
             </select>
             <div class="hint">Smooth temperature curves for PID control - reduces noise while preserving profile shape</div>
         </div>
@@ -548,13 +548,13 @@
         function applySmoothing(data, mode) {
             switch(mode) {
                 case 'ema-light':
-                    return exponentialMovingAverage(data, 0.3);
-                case 'ema-medium':
-                    return exponentialMovingAverage(data, 0.2);
-                case 'ema-heavy':
-                    return exponentialMovingAverage(data, 0.1);
-                case 'ema-xheavy':
                     return exponentialMovingAverage(data, 0.05);
+                case 'ema-medium':
+                    return exponentialMovingAverage(data, 0.02);
+                case 'ema-heavy':
+                    return exponentialMovingAverage(data, 0.01);
+                case 'ema-xheavy':
+                    return exponentialMovingAverage(data, 0.005);
                 case 'none':
                 default:
                     return data;
