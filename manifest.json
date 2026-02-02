@@ -1,0 +1,17 @@
+{
+  "name": "RoastLink ONE Universal Firmware",
+  "version": "1.0.0",
+  "funding_url": "https://roastlink.com",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        {
+          "path": "RoastLink_ONE_Universal_ESP32C6.ino.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
