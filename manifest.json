@@ -4,7 +4,7 @@
   "builds": [{
     "chipFamily": "ESP32-C6",
     "parts": [{
-      "path": "ONEMerged.bin",
+      "path": "c6-unified.bin",
       "offset": 0
     }]
   }]
