@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoastLink - Roast.World to Artisan Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f1220;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            background: #1a1f36;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            border: 1px solid rgba(78, 161, 255, 0.1);
+        }
+        
+        h1 {
+            color: #e8eaf2;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        h1 a {
+            color: #e8eaf2;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        h1 a:hover {
+            color: #4ea1ff;
+        }
+        
+        .subtitle {
+            color: #9aa4bf;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #9aa4bf;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #1f2642;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s, background-color 0.3s;
+            background: #1f2642;
+            color: #e8eaf2;
+        }
+        
+        input[type="text"]::placeholder {
+            color: #6b7280;
+        }
+        
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #4ea1ff;
+            background: #252b45;
+        }
+        
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234ea1ff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        
+        select option {
+            background: #1a1f36;
+            color: #e8eaf2;
+        }
+        
+        .hint {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        
+        .coming-soon-badge {
+            display: inline-block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .checkbox-group {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #1f2642;
+            border-radius: 8px;
+            border-left: 4px solid #4ea1ff;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+            color: #e8eaf2;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #4ea1ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4ea1ff 0%, #5eb3ff 100%);
+            color: #0f1220;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(78, 161, 255, 0.4);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status.loading {
+            display: block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            border-left: 4px solid #4ea1ff;
+        }
+        
+        .status.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border-left: 4px solid #22c55e;
+        }
+        
+        .status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .roast-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1f2642;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            border-left: 4px solid #4ea1ff;
+            color: #e8eaf2;
+        }
+        
+        .roast-info strong {
+            color: #4ea1ff;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #4ea1ff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #1f2642;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        
+        .footer a {
+            color: #4ea1ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .footer a:hover {
+            color: #5eb3ff;
+        }
+        
+        .footer-domain {
+            color: #6b7280;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        
+        .newsletter-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1f2642;
+            border-radius: 8px;
+            border-left: 4px solid #4ea1ff;
+        }
+        
+        .newsletter-section h3 {
+            color: #e8eaf2;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .newsletter-description {
+            color: #9aa4bf;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        
+        .newsletter-form {
+            margin: 0;
+        }
+        
+        .newsletter-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .newsletter-input-group input[type="email"] {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #252b45;
+            border-radius: 6px;
+            background: #252b45;
+            color: #e8eaf2;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .newsletter-input-group input[type="email"]:focus {
+            outline: none;
+            border-color: #4ea1ff;
+        }
+        
+        .newsletter-input-group input[type="email"]::placeholder {
+            color: #6b7280;
+        }
+        
+        .newsletter-button {
+            padding: 10px 20px;
+            background: #4ea1ff;
+            color: #0f1220;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+        
+        .newsletter-button:hover {
+            background: #5eb3ff;
+        }
+        
+        .newsletter-status {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+        
+        .newsletter-status.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .newsletter-status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .newsletter-status.loading {
+            display: block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            border: 1px solid rgba(78, 161, 255, 0.2);
+        }
+        
+        @media (max-width: 480px) {
+            .newsletter-input-group {
+                flex-direction: column;
+            }
+            
+            .newsletter-button {
+                width: 100%;
+            }
+        }
+        
+        .examples {
+            background: #1f2642;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .examples-title {
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .examples code {
+            background: #252b45;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #4ea1ff;
+            word-break: break-all;
+            display: inline-block;
+            max-width: 100%;
+        }
+        
+        .examples-list {
+            font-size: 13px;
+            color: #9aa4bf;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><a href="https://roastlink.com" target="_blank">RoastLink Converter</a></h1>
+        <p class="subtitle">Convert roast profiles to Artisan CSV</p>
+        
+        <div class="examples">
+            <div class="examples-title">📝 Example Roast ID:</div>
+            <div class="examples-list">
+                <code>0QQFP4AFGdZC34Il64oPQ</code>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="sourcePlatform">Source Platform</label>
+            <select id="sourcePlatform">
+                <option value="roastworld">Roast.World</option>
+                <!-- Add more platforms here:
+                <option value="artisan">Artisan Profile</option>
+                <option value="cropster">Cropster</option>
+                -->
+            </select>
+            <div class="hint">More platforms coming soon</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="roastInput">Roast ID or URL</label>
+            <input 
+                type="text" 
+                id="roastInput" 
+                placeholder=""
+                value=""
+            >
+            <div class="hint">Enter a roast.world ID or paste the full URL</div>
+        </div>
+        
+        <div class="input-group">
+            <label>Channel Mapping</label>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center;">
+                <label for="etSource" style="color: #9aa4bf; font-size: 14px;">Artisan ET ←</label>
+                <select id="etSource" style="background: #252b47; color: #e8eaf2; border: 1px solid rgba(78, 161, 255, 0.2); padding: 8px; border-radius: 6px; width: 100%;">
+                    <option value="bean">Bean Temperature</option>
+                    <option value="ibts">IBTS</option>
+                </select>
+                
+                <label for="btSource" style="color: #9aa4bf; font-size: 14px;">Artisan BT ←</label>
+                <select id="btSource" style="background: #252b47; color: #e8eaf2; border: 1px solid rgba(78, 161, 255, 0.2); padding: 8px; border-radius: 6px; width: 100%;">
+                    <option value="ibts">IBTS</option>
+                    <option value="bean">Bean Temperature</option>
+                </select>
+            </div>
+            <div class="hint">Choose which roast.world channel goes to which Artisan channel</div>
+        </div>
+        
+        <button id="convertBtn" onclick="convertRoast()">
+            Convert to CSV
+        </button>
+        
+        <div id="status" class="status"></div>
+        
+        <!-- Newsletter Signup -->
+        <div class="newsletter-section" id="newsletterSection">
+            <h3>Get RoastLink Updates</h3>
+            <p class="newsletter-description">Subscribe to receive updates and product news!</p>
+            
+            <form class="newsletter-form" id="newsletterForm" onsubmit="return handleNewsletterSubmit(event)">
+                <div class="newsletter-input-group">
+                    <input 
+                        type="email" 
+                        id="newsletterEmail"
+                        name="fields[email]" 
+                        placeholder="your@email.com" 
+                        required
+                        aria-label="email"
+                    >
+                    <button type="submit" class="newsletter-button" id="newsletterBtn">Subscribe</button>
+                </div>
+            </form>
+            
+            <div id="newsletterStatus" class="newsletter-status"></div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="https://roastlink.com" target="_blank">RoastLink</a> - Temperature Logging for Coffee Roasters</p>
+            <p class="footer-domain">roastlink.com</p>
+        </div>
+    </div>
+
+    <script>
+        // Extract roast ID from URL or return the ID directly
+        function extractRoastId(input) {
+            const urlPattern = /roast\.world\/[^/]+\/roasts\/([A-Za-z0-9_-]+)/;
+            const match = input.match(urlPattern);
+            return match ? match[1] : input.trim();
+        }
+
+        // Detect if temperature data has duplicate samples
+        function detectDuplicateSamples(temps) {
+            if (temps.length < 40) return false;
+            
+            let duplicateCount = 0;
+            for (let i = 10; i < 30; i += 2) {
+                if (Math.abs(temps[i] - temps[i + 1]) < 0.01) {
+                    duplicateCount++;
+                }
+            }
+            
+            return duplicateCount > 8;
+        }
+
+        // Convert Celsius to Fahrenheit
+        function celsiusToFahrenheit(celsius) {
+            return celsius * 9/5 + 32;
+        }
+
+        // Format seconds to MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Show status message
+        function showStatus(message, type, roastInfo = null) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            
+            if (type === 'loading') {
+                statusDiv.innerHTML = `<span class="spinner"></span>${message}`;
+            } else {
+                statusDiv.innerHTML = message;
+                if (roastInfo) {
+                    statusDiv.innerHTML += roastInfo;
+                }
+            }
+        }
+
+        // Download CSV file
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Main conversion function
+        async function convertRoast() {
+            const input = document.getElementById('roastInput').value;
+            const etSource = document.getElementById('etSource').value;  // 'bean' or 'ibts'
+            const btSource = document.getElementById('btSource').value;  // 'bean' or 'ibts'
+            const convertBtn = document.getElementById('convertBtn');
+            
+            if (!input) {
+                showStatus('Please enter a roast ID or URL', 'error');
+                return;
+            }
+            
+            const roastId = extractRoastId(input);
+            
+            convertBtn.disabled = true;
+            showStatus('Fetching roast data...', 'loading');
+            
+            try {
+                // Fetch roast data
+                const url = `https://firebasestorage.googleapis.com/v0/b/testaillio.appspot.com/o/roasts%2F${roastId}.json?alt=media`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch roast data. Check the roast ID and make sure it\'s public.');
+                }
+                
+                const roastData = await response.json();
+                
+                showStatus('Converting to Artisan format...', 'loading');
+                
+                // Extract data
+                const btTemps = roastData.beanTemperature;
+                const drumTemps = roastData.drumTemperature;
+                const sampleRate = roastData.sampleRate;
+                const roastStartIdx = roastData.roastStartIndex;
+                const firstCrackIdx = roastData.indexFirstCrackStart || 0;
+                const yellowingIdx = roastData.indexYellowingStart || 0;
+                const firstCrackEndIdx = roastData.indexFirstCrackEnd || 0;
+                const secondCrackStartIdx = roastData.indexSecondCrackStart || 0;
+                const secondCrackEndIdx = roastData.indexSecondCrackEnd || 0;
+                const weightIn = roastData.weightGreen;
+                const weightOut = roastData.weightRoasted;
+                const roastName = roastData.roastName || 'Roast';
+                const totalRoastTime = roastData.totalRoastTime; // Actual roast duration in seconds
+                
+                // Detect duplicate samples in EITHER array
+                const drumHasDuplicates = detectDuplicateSamples(drumTemps);
+                const beanHasDuplicates = detectDuplicateSamples(btTemps);
+                const hasDuplicates = drumHasDuplicates || beanHasDuplicates;
+                
+                // Extract temperature arrays
+                let btArray, drumArray;
+                if (hasDuplicates) {
+                    // Take every other sample to remove duplicates
+                    btArray = btTemps.filter((_, i) => i >= roastStartIdx && (i - roastStartIdx) % 2 === 0);
+                    drumArray = drumTemps.filter((_, i) => i >= roastStartIdx && (i - roastStartIdx) % 2 === 0);
+                } else {
+                    btArray = btTemps.slice(roastStartIdx);
+                    drumArray = drumTemps.slice(roastStartIdx);
+                }
+                
+                const numPoints = Math.min(btArray.length, drumArray.length);
+                btArray = btArray.slice(0, numPoints);
+                drumArray = drumArray.slice(0, numPoints);
+                
+                // Calculate actual sample rate from metadata
+                // Use totalRoastTime from roast.world which is the ACTUAL duration
+                const actualSampleRate = totalRoastTime / (numPoints - 1);
+                
+                const totalTime = totalRoastTime; // Use metadata, not calculated
+                
+                // Calculate all roast marker times using the same method
+                const firstCrackTime = hasDuplicates 
+                    ? Math.floor((firstCrackIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (firstCrackIdx - roastStartIdx) * actualSampleRate;
+                
+                const yellowingTime = (yellowingIdx > 0 && hasDuplicates)
+                    ? Math.floor((yellowingIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (yellowingIdx > 0)
+                    ? (yellowingIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const firstCrackEndTime = (firstCrackEndIdx > 0 && hasDuplicates)
+                    ? Math.floor((firstCrackEndIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (firstCrackEndIdx > 0)
+                    ? (firstCrackEndIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const secondCrackStartTime = (secondCrackStartIdx > 0 && hasDuplicates)
+                    ? Math.floor((secondCrackStartIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (secondCrackStartIdx > 0)
+                    ? (secondCrackStartIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const secondCrackEndTime = (secondCrackEndIdx > 0 && hasDuplicates)
+                    ? Math.floor((secondCrackEndIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (secondCrackEndIdx > 0)
+                    ? (secondCrackEndIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                // Build CSV
+                const csvLines = [];
+                const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '.');
+                
+                // Header
+                csvLines.push(
+                    `Date:${today}\t` +
+                    `Unit:F\t` +
+                    `CHARGE:00:00\t` +
+                    `TP:\t` +
+                    `DRYe:${yellowingTime > 0 ? formatTime(yellowingTime) : ''}\t` +
+                    `FCs:${formatTime(firstCrackTime)}\t` +
+                    `FCe:${firstCrackEndTime > 0 ? formatTime(firstCrackEndTime) : ''}\t` +
+                    `SCs:${secondCrackStartTime > 0 ? formatTime(secondCrackStartTime) : ''}\t` +
+                    `SCe:${secondCrackEndTime > 0 ? formatTime(secondCrackEndTime) : ''}\t` +
+                    `DROP:${formatTime(totalTime)}\t` +
+                    `COOL:\t` +
+                    `Time:00:00\t` +
+                    `Notes:${roastName} (roast.world ID: ${roastId})`
+                );
+                
+                // Column headers
+                csvLines.push('Time1\tTime2\tET\tBT\tEvent');
+                
+                // Data rows
+                for (let i = 0; i < numPoints; i++) {
+                    const t = i * actualSampleRate;
+                    const btF = celsiusToFahrenheit(btArray[i]);
+                    const drumF = celsiusToFahrenheit(drumArray[i]);
+                    const timeStr = formatTime(t);
+                    
+                    let event = '';
+                    if (i === 0) {
+                        event = 'Charge';
+                    } else if (firstCrackTime > 0 && Math.abs(t - firstCrackTime) < actualSampleRate) {
+                        event = 'FCs';
+                    } else if (i === numPoints - 1) {
+                        event = 'Drop';
+                    }
+                    
+                    // Map channels based on user selection
+                    // btF = Bean Temperature, drumF = IBTS/Drum Temperature
+                    const etTemp = etSource === 'bean' ? btF : drumF;
+                    const btTemp = btSource === 'bean' ? btF : drumF;
+                    
+                    csvLines.push(`${timeStr}\t${timeStr}\t${etTemp.toFixed(1)}\t${btTemp.toFixed(1)}\t${event}`);
+                }
+                
+                const csvContent = csvLines.join('\n');
+                
+                // Generate filename
+                const safeName = roastName.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const filename = `${safeName}_${roastId.substring(0, 8)}.csv`;
+                
+                // Download file
+                downloadCSV(csvContent, filename);
+                
+                // Show success
+                const weightLoss = ((weightIn - weightOut) / weightIn * 100).toFixed(1);
+                const roastInfo = `
+                    <div class="roast-info">
+                        <strong>${roastName}</strong><br>
+                        Duration: ${formatTime(totalTime)} (${Math.floor(totalTime)}s)<br>
+                        ${yellowingTime > 0 ? `Yellowing: ${formatTime(yellowingTime)}<br>` : ''}
+                        First Crack: ${formatTime(firstCrackTime)}${firstCrackEndTime > 0 ? ` - ${formatTime(firstCrackEndTime)}` : ''}<br>
+                        ${secondCrackStartTime > 0 ? `Second Crack: ${formatTime(secondCrackStartTime)}${secondCrackEndTime > 0 ? ` - ${formatTime(secondCrackEndTime)}` : ''}<br>` : ''}
+                        Weight: ${weightIn}g → ${weightOut}g (${weightLoss}% loss)<br>
+                        Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
+                        Total Points: ${numPoints}<br>
+                        Mapping: ET=${etSource === 'bean' ? 'Bean' : 'IBTS'}, BT=${btSource === 'bean' ? 'Bean' : 'IBTS'}
+                    </div>
+                `;
+                
+                showStatus(`✓ Successfully converted! CSV downloaded as: <strong>${filename}</strong>`, 'success', roastInfo);
+                
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                convertBtn.disabled = false;
+            }
+        }
+        
+        // Allow Enter key to convert
+        document.getElementById('roastInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertRoast();
+            }
+        });
+        
+        // Newsletter form handler
+        async function handleNewsletterSubmit(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('newsletterForm');
+            const email = document.getElementById('newsletterEmail').value;
+            const statusDiv = document.getElementById('newsletterStatus');
+            const submitBtn = document.getElementById('newsletterBtn');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Subscribing...';
+            statusDiv.className = 'newsletter-status loading';
+            statusDiv.textContent = 'Processing...';
+            
+            try {
+                // Submit to MailerLite
+                const formData = new FormData();
+                formData.append('fields[email]', email);
+                formData.append('ml-submit', '1');
+                formData.append('anticsrf', 'true');
+                
+                const response = await fetch('https://assets.mailerlite.com/jsonp/2015844/forms/175633197006062847/subscribe', {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' // MailerLite doesn't support CORS, but submission still works
+                });
+                
+                // Since we're using no-cors, we can't read the response
+                // But if we got here, the request was sent successfully
+                statusDiv.className = 'newsletter-status success';
+                statusDiv.textContent = '✓ Thank you for subscribing! Check your email to confirm.';
+                
+                // Clear the form
+                form.reset();
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Subscribe';
+                }, 3000);
+                
+            } catch (error) {
+                statusDiv.className = 'newsletter-status error';
+                statusDiv.textContent = '✗ Something went wrong. Please try again.';
+                
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Subscribe';
+            }
+            
+            return false;
+        }
+    </script>
+</body>
+</html>
