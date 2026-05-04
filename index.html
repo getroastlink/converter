@@ -600,13 +600,6 @@
                 btArray = btArray.slice(0, numPoints);
                 drumArray = drumArray.slice(0, numPoints);
                 
-                // Apply temperature smoothing if selected
-                const smoothingMode = document.getElementById('smoothing').value;
-                if (smoothingMode !== 'none') {
-                    btArray = applySmoothing(btArray, smoothingMode);
-                    drumArray = applySmoothing(drumArray, smoothingMode);
-                }
-                
                 // Calculate actual sample rate from metadata
                 // When duplicates exist, each point represents half a second
                 const rawSampleRate = totalRoastTime / (numPoints - 1);
