@@ -970,29 +970,42 @@
                 csvLines.push('Time1\tTime2\tET\tBT\tEvent');
                 
                 // Data rows
-                const csvSampleRate = hasDuplicates ? actualSampleRate * 2 : actualSampleRate;
                 for (let i = 0; i < numPoints; i++) {
-                const t = i * csvSampleRate;
-                    const btF = celsiusToFahrenheit(btArray[i]);
-                    const drumF = celsiusToFahrenheit(drumArray[i]);
+                    // Skip odd indices if duplicates detected
+                    if (hasDuplicates && i % 2 === 1) {
+                        continue;
+                    }
+                    
+                    const t = hasDuplicates ? (i / 2) * (actualSampleRate * 2) : i * actualSampleRate;
+                    
+                    // Average current with next if duplicates
+                    let btF, drumF;
+                    if (hasDuplicates && i + 1 < numPoints) {
+                        btF = celsiusToFahrenheit((btArray[i] + btArray[i + 1]) / 2);
+                        drumF = celsiusToFahrenheit((drumArray[i] + drumArray[i + 1]) / 2);
+                    } else {
+                        btF = celsiusToFahrenheit(btArray[i]);
+                        drumF = celsiusToFahrenheit(drumArray[i]);
+                    }
+                    
                     const timeStr = formatTime(t);
                     
                     let event = '';
-if (i === 0) {
-    event = 'Charge';
-} else if (yellowingTime > 0 && Math.abs(t - yellowingTime) < csvSampleRate) {
-    event = 'DRYe';
-} else if (firstCrackTime > 0 && Math.abs(t - firstCrackTime) < csvSampleRate) {
-    event = 'FCs';
-} else if (firstCrackEndTime > 0 && Math.abs(t - firstCrackEndTime) < csvSampleRate) {
-    event = 'FCe';
-} else if (secondCrackStartTime > 0 && Math.abs(t - secondCrackStartTime) < csvSampleRate) {
-    event = 'SCs';
-} else if (secondCrackEndTime > 0 && Math.abs(t - secondCrackEndTime) < csvSampleRate) {
-    event = 'SCe';
-} else if (i === numPoints - 1) {
-    event = 'Drop';
-}
+                    if (i === 0) {
+                        event = 'Charge';
+                    } else if (yellowingTime > 0 && Math.abs(t - yellowingTime) < 1.5) {
+                        event = 'DRYe';
+                    } else if (firstCrackTime > 0 && Math.abs(t - firstCrackTime) < 1.5) {
+                        event = 'FCs';
+                    } else if (firstCrackEndTime > 0 && Math.abs(t - firstCrackEndTime) < 1.5) {
+                        event = 'FCe';
+                    } else if (secondCrackStartTime > 0 && Math.abs(t - secondCrackStartTime) < 1.5) {
+                        event = 'SCs';
+                    } else if (secondCrackEndTime > 0 && Math.abs(t - secondCrackEndTime) < 1.5) {
+                        event = 'SCe';
+                    } else if (Math.abs(t - totalTime) < 1.5) {
+                        event = 'Drop';
+                    }
                     
                     // Default: ET=Bean, BT=Drum (inverted from roast.world)
                     // If checkbox is checked, use original: ET=Drum, BT=Bean
