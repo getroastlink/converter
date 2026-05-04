@@ -888,16 +888,9 @@
                 const beanHasDuplicates = detectDuplicateSamples(btTemps);
                 const hasDuplicates = drumHasDuplicates || beanHasDuplicates;
                 
-                // Extract temperature arrays
-                let btArray, drumArray;
-                if (hasDuplicates) {
-                    // Take every other sample to remove duplicates
-                    btArray = btTemps.filter((_, i) => i >= roastStartIdx && (i - roastStartIdx) % 2 === 0);
-                    drumArray = drumTemps.filter((_, i) => i >= roastStartIdx && (i - roastStartIdx) % 2 === 0);
-                } else {
-                    btArray = btTemps.slice(roastStartIdx);
-                    drumArray = drumTemps.slice(roastStartIdx);
-                }
+                 // Extract temperature arrays - NO filtering here, we'll handle it in CSV output
+                let btArray = btTemps.slice(roastStartIdx);
+                let drumArray = drumTemps.slice(roastStartIdx);
                 
                 const numPoints = Math.min(btArray.length, drumArray.length);
                 btArray = btArray.slice(0, numPoints);
@@ -911,8 +904,9 @@
                 }
                 
                 // Calculate actual sample rate from metadata
-                // Use totalRoastTime from roast.world which is the ACTUAL duration
-                const actualSampleRate = totalRoastTime / (numPoints - 1);
+                // When duplicates exist, the sample rate is half the expected rate
+                const rawSampleRate = totalRoastTime / (numPoints - 1);
+                const actualSampleRate = hasDuplicates ? rawSampleRate * 2 : rawSampleRate;
                 
                 const totalTime = totalRoastTime; // Use metadata, not calculated
                 
