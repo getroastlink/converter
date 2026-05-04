@@ -587,18 +587,18 @@
                 const roastName = roastData.roastName || 'Roast';
                 const totalRoastTime = roastData.totalRoastTime; // Actual roast duration in seconds
                 
-                // Detect duplicate samples in EITHER array
-                const drumHasDuplicates = detectDuplicateSamples(drumTemps);
-                const beanHasDuplicates = detectDuplicateSamples(btTemps);
-                const hasDuplicates = drumHasDuplicates || beanHasDuplicates;
-                
-                // Extract temperature arrays - NO filtering here, we'll handle it in CSV output
+                // Extract temperature arrays first
                 let btArray = btTemps.slice(roastStartIdx);
                 let drumArray = drumTemps.slice(roastStartIdx);
                 
                 const numPoints = Math.min(btArray.length, drumArray.length);
                 btArray = btArray.slice(0, numPoints);
                 drumArray = drumArray.slice(0, numPoints);
+                
+                // Detect duplicate samples in EITHER array AFTER slicing
+                const drumHasDuplicates = detectDuplicateSamples(drumArray);
+                const beanHasDuplicates = detectDuplicateSamples(btArray);
+                const hasDuplicates = drumHasDuplicates || beanHasDuplicates;
                 
                 // Calculate actual sample rate from metadata
                 // When duplicates exist, each point represents half a second
