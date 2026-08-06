@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoastLink - Roast.World to Artisan Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f1220;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            background: #1a1f36;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            border: 1px solid rgba(78, 161, 255, 0.1);
+        }
+        
+        h1 {
+            color: #e8eaf2;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        h1 a {
+            color: #e8eaf2;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        h1 a:hover {
+            color: #4ea1ff;
+        }
+        
+        .subtitle {
+            color: #9aa4bf;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #9aa4bf;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #1f2642;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s, background-color 0.3s;
+            background: #1f2642;
+            color: #e8eaf2;
+        }
+        
+        input[type="text"]::placeholder {
+            color: #6b7280;
+        }
+        
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #4ea1ff;
+            background: #252b45;
+        }
+        
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234ea1ff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        
+        select option {
+            background: #1a1f36;
+            color: #e8eaf2;
+        }
+        
+        .hint {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        
+        .coming-soon-badge {
+            display: inline-block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .checkbox-group {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #1f2642;
+            border-radius: 8px;
+            border-left: 4px solid #4ea1ff;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+            color: #e8eaf2;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #4ea1ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4ea1ff 0%, #5eb3ff 100%);
+            color: #0f1220;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(78, 161, 255, 0.4);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status.loading {
+            display: block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            border-left: 4px solid #4ea1ff;
+        }
+        
+        .status.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border-left: 4px solid #22c55e;
+        }
+        
+        .status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .roast-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1f2642;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            border-left: 4px solid #4ea1ff;
+            color: #e8eaf2;
+        }
+        
+        .roast-info strong {
+            color: #4ea1ff;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #4ea1ff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #1f2642;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        
+        .footer a {
+            color: #4ea1ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .footer a:hover {
+            color: #5eb3ff;
+        }
+        
+        .footer-domain {
+            color: #6b7280;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        
+        .newsletter-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1f2642;
+            border-radius: 8px;
+            border-left: 4px solid #4ea1ff;
+        }
+        
+        .newsletter-section h3 {
+            color: #e8eaf2;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .newsletter-description {
+            color: #9aa4bf;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        
+        .newsletter-form {
+            margin: 0;
+        }
+        
+        .newsletter-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .newsletter-input-group input[type="email"] {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #252b45;
+            border-radius: 6px;
+            background: #252b45;
+            color: #e8eaf2;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .newsletter-input-group input[type="email"]:focus {
+            outline: none;
+            border-color: #4ea1ff;
+        }
+        
+        .newsletter-input-group input[type="email"]::placeholder {
+            color: #6b7280;
+        }
+        
+        .newsletter-button {
+            padding: 10px 20px;
+            background: #4ea1ff;
+            color: #0f1220;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+        
+        .newsletter-button:hover {
+            background: #5eb3ff;
+        }
+        
+        .newsletter-status {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+        
+        .newsletter-status.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .newsletter-status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .newsletter-status.loading {
+            display: block;
+            background: rgba(78, 161, 255, 0.1);
+            color: #4ea1ff;
+            border: 1px solid rgba(78, 161, 255, 0.2);
+        }
+        
+        @media (max-width: 480px) {
+            .newsletter-input-group {
+                flex-direction: column;
+            }
+            
+            .newsletter-button {
+                width: 100%;
+            }
+        }
+        
+        .examples {
+            background: #1f2642;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .examples-title {
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .examples code {
+            background: #252b45;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #4ea1ff;
+            word-break: break-all;
+            display: inline-block;
+            max-width: 100%;
+        }
+        
+        .examples-list {
+            font-size: 13px;
+            color: #9aa4bf;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><a href="https://roastlink.com" target="_blank">RoastLink Converter</a></h1>
+        <p class="subtitle">Convert roast profiles to Artisan CSV or ALOG</p>
+        
+        <div class="examples">
+            <div class="examples-title">📝 Example Roast ID:</div>
+            <div class="examples-list">
+                <code>0QQFP4AFGdZC34Il64oPQ</code>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="sourcePlatform">Source Platform</label>
+            <select id="sourcePlatform">
+                <option value="roastworld">Roast.World</option>
+                <!-- Add more platforms here:
+                <option value="artisan">Artisan Profile</option>
+                <option value="cropster">Cropster</option>
+                -->
+            </select>
+            <div class="hint">More platforms coming soon</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="outputFormat">Output Format</label>
+            <select id="outputFormat">
+                <option value="csv">CSV (Universal Import)</option>
+                <option value="alog">ALOG (Artisan Native)</option>
+            </select>
+            <div class="hint">CSV works everywhere, ALOG opens directly in Artisan</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="smoothing">Temperature Smoothing <span style="color: #f59e0b; font-size: 12px;">(BETA)</span></label>
+            <select id="smoothing">
+                <option value="none" selected>None (Raw Data)</option>
+                <option value="ema-light">Light Smoothing (EMA α=0.05)</option>
+                <option value="ema-medium">Medium Smoothing (EMA α=0.02)</option>
+                <option value="ema-heavy">Heavy Smoothing (EMA α=0.01)</option>
+                <option value="ema-xheavy">Extra Heavy Smoothing (EMA α=0.005)</option>
+            </select>
+            <div class="hint">Smooth temperature curves for PID control - reduces noise while preserving profile shape</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="roastInput">Roast ID or URL</label>
+            <input 
+                type="text" 
+                id="roastInput" 
+                placeholder=""
+                value=""
+            >
+            <div class="hint">Enter a roast.world ID or paste the full URL</div>
+        </div>
+        
+        <div class="checkbox-group">
+            <label>
+                <input type="checkbox" id="swapTemps">
+                Swap ET <-> BT
+            </label>
+        </div>
+        
+        <button id="convertBtn" onclick="convertRoast()">
+            Convert
+        </button>
+        
+        <div id="status" class="status"></div>
+        
+        <!-- Newsletter Signup -->
+        <div class="newsletter-section" id="newsletterSection">
+            <h3>Get RoastLink Updates</h3>
+            <p class="newsletter-description">Subscribe to receive updates and product news!</p>
+            
+            <form class="newsletter-form" id="newsletterForm" onsubmit="return handleNewsletterSubmit(event)">
+                <div class="newsletter-input-group">
+                    <input 
+                        type="email" 
+                        id="newsletterEmail"
+                        name="fields[email]" 
+                        placeholder="your@email.com" 
+                        required
+                        aria-label="email"
+                    >
+                    <button type="submit" class="newsletter-button" id="newsletterBtn">Subscribe</button>
+                </div>
+            </form>
+            
+            <div id="newsletterStatus" class="newsletter-status"></div>
+        </div>
+        
+        <div class="footer">
+            <p><a href="https://roastlink.com" target="_blank">RoastLink</a> - Temperature Logging for Coffee Roasters</p>
+            <p class="footer-domain">roastlink.com</p>
+        </div>
+    </div>
+
+    <script>
+        // Extract roast ID from URL or return the ID directly
+        function extractRoastId(input) {
+            const urlPattern = /roast\.world\/[^/]+\/roasts\/([A-Za-z0-9_-]+)/;
+            const match = input.match(urlPattern);
+            return match ? match[1] : input.trim();
+        }
+
+        // Detect if temperature data has duplicate samples
+        function detectDuplicateSamples(temps) {
+            if (temps.length < 40) return false;
+            
+            let duplicateCount = 0;
+            for (let i = 10; i < 30; i += 2) {
+                if (Math.abs(temps[i] - temps[i + 1]) < 0.01) {
+                    duplicateCount++;
+                }
+            }
+            
+            return duplicateCount > 8;
+        }
+
+        // Convert Celsius to Fahrenheit
+        function celsiusToFahrenheit(celsius) {
+            return celsius * 9/5 + 32;
+        }
+
+        // Format seconds to MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Exponential Moving Average smoothing
+        function exponentialMovingAverage(data, alpha) {
+            if (data.length === 0) return data;
+            const smoothed = [data[0]];
+            for (let i = 1; i < data.length; i++) {
+                smoothed.push(alpha * data[i] + (1 - alpha) * smoothed[i - 1]);
+            }
+            return smoothed;
+        }
+
+        // Apply smoothing based on selected mode
+        function applySmoothing(data, mode) {
+            switch(mode) {
+                case 'ema-light':
+                    return exponentialMovingAverage(data, 0.05);
+                case 'ema-medium':
+                    return exponentialMovingAverage(data, 0.02);
+                case 'ema-heavy':
+                    return exponentialMovingAverage(data, 0.01);
+                case 'ema-xheavy':
+                    return exponentialMovingAverage(data, 0.005);
+                case 'none':
+                default:
+                    return data;
+            }
+        }
+
+        // Generate ALOG file content (arrays passed in must already be deduplicated)
+        function generateALOG(roastData, roastId, etArr, btArr, sampleInterval, nPts,
+                             yellowingTime, firstCrackTime, firstCrackEndTime,
+                             secondCrackStartTime, secondCrackEndTime, totalTime) {
+
+            const roastName = roastData.roastName || 'Roast';
+            const weightIn = roastData.weightGreen || 0;
+            const weightOut = roastData.weightRoasted || 0;
+
+            // Create time array
+            const timex = [];
+            for (let i = 0; i < nPts; i++) {
+                timex.push(parseFloat((i * sampleInterval).toFixed(1)));
+            }
+
+            // Temperature arrays already mapped: temp1 = ET, temp2 = BT
+            const temp1 = etArr.map(v => parseFloat(v.toFixed(1)));
+            const temp2 = btArr.map(v => parseFloat(v.toFixed(1)));
+
+            // timeindex contains INDICES into timex array, NOT absolute seconds!
+            const clampIdx = (idx) => Math.max(0, Math.min(nPts - 1, idx));
+            const timeindex = [
+                0,  // CHARGE always at start (index 0)
+                yellowingTime > 0 ? clampIdx(Math.round(yellowingTime / sampleInterval)) : 0,
+                firstCrackTime > 0 ? clampIdx(Math.round(firstCrackTime / sampleInterval)) : 0,
+                firstCrackEndTime > 0 ? clampIdx(Math.round(firstCrackEndTime / sampleInterval)) : 0,
+                secondCrackStartTime > 0 ? clampIdx(Math.round(secondCrackStartTime / sampleInterval)) : 0,
+                secondCrackEndTime > 0 ? clampIdx(Math.round(secondCrackEndTime / sampleInterval)) : 0,
+                nPts - 1,  // DROP at last index
+                0   // COOL not set
+            ];
+
+            const now = new Date();
+            const roastdate = now.toDateString();
+            const roastisodate = now.toISOString().split('T')[0];
+            const roastepoch = Math.floor(now.getTime() / 1000);
+            const roasttzoffset = -now.getTimezoneOffset() * 60;
+
+            const uuid = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[x]/g, function() {
+                return (Math.random() * 16 | 0).toString(16);
+            });
+
+            const alog = {
+                'recording_version': 'unknown',
+                'recording_revision': 'unknown',
+                'recording_build': 'unknown',
+                'version': '3.4.0',
+                'revision': '44f2ff883',
+                'build': '2',
+                'artisan_os': 'Web',
+                'artisan_os_version': '1.0',
+                'artisan_os_arch': 'web',
+                'mode': 'F',
+                'viewerMode': false,
+                'timeindex': timeindex,
+                'flavors': [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+                'flavors_total_correction': 0,
+                'flavorlabels': ['Acidity', 'Aftertaste', 'Clean Cup', 'Head', 'Fragrance', 'Sweetness', 'Aroma', 'Balance', 'Body'],
+                'flavorstartangle': 90,
+                'flavoraspect': 1.0,
+                'title': 'Roaster Scope',
+                'locale': 'en',
+                'beans': roastName,
+                'weight': [weightIn, weightOut, 'g'],
+                'defects_weight': 0,
+                'volume': [0, 0, 'l'],
+                'density': [0, 'g', 1, 'l'],
+                'density_roasted': [0, 'g', 1, 'l'],
+                'roastertype': 'Roast.World Import',
+                'roastersize': 0,
+                'roasterheating': 0,
+                'machinesetup': '',
+                'operator': '',
+                'organization': '',
+                'drumspeed': '',
+                'heavyFC': false,
+                'lowFC': false,
+                'lightCut': false,
+                'darkCut': false,
+                'drops': false,
+                'oily': false,
+                'uneven': false,
+                'tipping': false,
+                'scorching': false,
+                'divots': false,
+                'whole_color': 0.0,
+                'ground_color': 0.0,
+                'color_system': '',
+                'volumeCalcWeightIn': '',
+                'volumeCalcWeightOut': '',
+                'roastdate': roastdate,
+                'roastisodate': roastisodate,
+                'roasttime': '00:00:00',
+                'roastepoch': roastepoch,
+                'roasttzoffset': roasttzoffset,
+                'roastbatchnr': 0,
+                'roastbatchprefix': '',
+                'roastbatchpos': 1,
+                'roastUUID': uuid,
+                'beansize_min': '0',
+                'beansize_max': '0',
+                'specialevents': [],
+                'specialeventstype': [],
+                'specialeventsvalue': [],
+                'specialeventsStrings': [],
+                'default_etypes': [true, true, true, true, true],
+                'default_etypes_set': [0, 0, 0, 0, 0],
+                'etypes': ['--', '--', '--', '--', '--'],
+                'roastingnotes': `Imported from roast.world ID: ${roastId}`,
+                'cuppingnotes': '',
+                'timex': timex,
+                'temp1': temp1,
+                'temp2': temp2,
+                'extratemp1': [],
+                'extratemp2': [],
+                'extratimex': [],
+                'alarmaction': [3, 6],
+                'alarmbeep': [0, 0],
+                'alarmcond': [1, 1],
+                'alarmflag': [0, 0],
+                'alarmguard': [-1, -1],
+                'alarmnegguard': [-1, -1],
+                'alarmoffset': [1, 1],
+                'alarmsetlabel': '',
+                'alarmsource': [1, 1],
+                'alarmstrings': ['100', '0'],
+                'alarmtemperature': [500.0, 500.0],
+                'alarmtime': [6, 6],
+                'ambientTemp': 0.0,
+                'ambient_humidity': 0.0,
+                'ambient_pressure': 0.0,
+                'anno_positions': [],
+                'backgroundpath': '',
+                'bbp_begin': 'Start',
+                'bbp_drop_to_end': 0.0,
+                'bbp_dropbt': 0.0,
+                'bbp_dropet': 0.0,
+                'bbp_dropevents': [],
+                'bbp_endevents': [],
+                'bbp_endroast_epoch_msec': 0,
+                'bbp_time_added_from_prev': 0.0,
+                'betweenbatchDuration': 0,
+                'betweenbatch_after_preheat': true,
+                'betweenbatchenergies': [0.0, 0.0, 0.0, 0.0],
+                'biogas_co2_reduction': 0.7562,
+                'co2kg_per_btu': [6.288e-05, 5.291e-05, 0.0002964],
+                'computed': {},
+                'coolingDuration': 0,
+                'coolingenergies': [0.0, 0.0, 0.0, 0.0],
+                'devices': ['-ARDUINOTC4'],
+                'electricEnergyMix': 0,
+                'elevation': 0,
+                'externaloutprogram': 'out.py',
+                'externalprogram': 'test.py',
+                'extraCurveVisibility1': [false, false, false, false, false, false, false, false, false, false],
+                'extraCurveVisibility2': [false, false, false, false, false, false, false, false, false, false],
+                'extraDelta1': [false, false, false, false, false, false, false, false, false, false],
+                'extraDelta2': [false, false, false, false, false, false, false, false, false, false],
+                'extraFill1': [false, false, false, false, false, false, false, false, false, false],
+                'extraFill2': [false, false, false, false, false, false, false, false, false, false],
+                'extraLCDvisibility1': [false, false, false, false, false, false, false, false, false, false],
+                'extraLCDvisibility2': [false, false, false, false, false, false, false, false, false, false],
+                'extraNoneTempHint1': [],
+                'extraNoneTempHint2': [],
+                'extradevicecolor1': [],
+                'extradevicecolor2': [],
+                'extradevices': [],
+                'extradrawstyles1': [],
+                'extradrawstyles2': [],
+                'extralinestyles1': [],
+                'extralinestyles2': [],
+                'extralinewidths1': [],
+                'extralinewidths2': [],
+                'extramarkers1': [],
+                'extramarkers2': [],
+                'extramarkersizes1': [],
+                'extramarkersizes2': [],
+                'extramathexpression1': [],
+                'extramathexpression2': [],
+                'extraname1': [],
+                'extraname2': [],
+                'flag_positions': [],
+                'gasMix': 0,
+                'greens_temp': 0.0,
+                'load_etypes': [0, 0, 0, 0],
+                'loadevent_hundpcts': [100, 100, 100, 100],
+                'loadevent_zeropcts': [0, 0, 0, 0],
+                'loadlabels': ['', '', '', ''],
+                'loadratings': [0.0, 0.0, 0.0, 0.0],
+                'meterfuels': [2, 2],
+                'meterlabels': ['', ''],
+                'meterreads': [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+                'metersources': [0, 0],
+                'meterunits': [3, 3],
+                'moisture_greens': 0.0,
+                'moisture_roasted': 0.0,
+                'phases': [300, 264, 358, 450],
+                'pidKd': 8.0,
+                'pidKi': 0.05,
+                'pidKp': 1.2,
+                'pidSource': 1,
+                'preheatDuration': 0,
+                'preheatenergies': [0.0, 0.0, 0.0, 0.0],
+                'presssure_percents': [false, false, false, false],
+                'ratingunits': [0, 0, 0, 0],
+                'samplinginterval': sampleInterval,
+                'sourcetypes': [0, 0, 0, 0],
+                'svActions': [false, false, false, false, false, false, false, false],
+                'svBeeps': [false, false, false, false, false, false, false, false],
+                'svDescriptions': ['', '', '', '', '', '', '', ''],
+                'svLabel': '',
+                'svLookahead': 5,
+                'svRamps': [0, 0, 0, 0, 0, 0, 0, 0],
+                'svSoaks': [0, 0, 0, 0, 0, 0, 0, 0],
+                'svValues': [0, 0, 0, 0, 0, 0, 0, 0],
+                'xmax': 900.0,
+                'xmin': -30.0,
+                'ymax': 450,
+                'ymin': 0,
+                'zmax': 1,
+                'zmin': 0
+            };
+
+            // Convert to Python dict string format
+            return JSON.stringify(alog)
+                .replace(/"/g, "'")
+                .replace(/true/g, 'True')
+                .replace(/false/g, 'False')
+                .replace(/null/g, 'None');
+        }
+
+        // Show status message
+        function showStatus(message, type, roastInfo = null) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            
+            if (type === 'loading') {
+                statusDiv.innerHTML = `<span class="spinner"></span>${message}`;
+            } else {
+                statusDiv.innerHTML = message;
+                if (roastInfo) {
+                    statusDiv.innerHTML += roastInfo;
+                }
+            }
+        }
+
+        // Download CSV file
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Main conversion function
+        async function convertRoast() {
+            const input = document.getElementById('roastInput').value;
+            const swapTemps = document.getElementById('swapTemps').checked;
+            const convertBtn = document.getElementById('convertBtn');
+            
+            if (!input) {
+                showStatus('Please enter a roast ID or URL', 'error');
+                return;
+            }
+            
+            const roastId = extractRoastId(input);
+            
+            convertBtn.disabled = true;
+            showStatus('Fetching roast data...', 'loading');
+            
+            try {
+                // Fetch roast data
+                const url = `https://firebasestorage.googleapis.com/v0/b/testaillio.appspot.com/o/roasts%2F${roastId}.json?alt=media`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch roast data. Check the roast ID and make sure it\'s public.');
+                }
+                
+                const roastData = await response.json();
+                
+                showStatus('Converting to Artisan format...', 'loading');
+                
+                // Extract data
+                const btTemps = roastData.beanTemperature;
+                const drumTemps = roastData.drumTemperature;
+                const sampleRate = roastData.sampleRate;
+                const roastStartIdx = roastData.roastStartIndex;
+                const firstCrackIdx = roastData.indexFirstCrackStart || 0;
+                const yellowingIdx = roastData.indexYellowingStart || 0;
+                const firstCrackEndIdx = roastData.indexFirstCrackEnd || 0;
+                const secondCrackStartIdx = roastData.indexSecondCrackStart || 0;
+                const secondCrackEndIdx = roastData.indexSecondCrackEnd || 0;
+                const weightIn = roastData.weightGreen;
+                const weightOut = roastData.weightRoasted;
+                const roastName = roastData.roastName || 'Roast';
+                const totalRoastTime = roastData.totalRoastTime; // Actual roast duration in seconds
+                
+                // Extract temperature arrays first
+                let btArray = btTemps.slice(roastStartIdx);
+                let drumArray = drumTemps.slice(roastStartIdx);
+                
+                const numPoints = Math.min(btArray.length, drumArray.length);
+                btArray = btArray.slice(0, numPoints);
+                drumArray = drumArray.slice(0, numPoints);
+                
+                // Detect duplicate samples in EITHER array AFTER slicing
+                // (detect BEFORE smoothing - smoothing would mask the duplicates)
+                const drumHasDuplicates = detectDuplicateSamples(drumArray);
+                const beanHasDuplicates = detectDuplicateSamples(btArray);
+                const hasDuplicates = drumHasDuplicates || beanHasDuplicates;
+                
+                // Apply temperature smoothing if selected
+                const smoothingMode = document.getElementById('smoothing').value;
+                if (smoothingMode !== 'none') {
+                    btArray = applySmoothing(btArray, smoothingMode);
+                    drumArray = applySmoothing(drumArray, smoothingMode);
+                }
+                
+                // Calculate actual sample rate from metadata
+                // When duplicates exist, each point represents half a second
+                const rawSampleRate = totalRoastTime / (numPoints - 1);
+                const actualSampleRate = hasDuplicates ? rawSampleRate * 2 : rawSampleRate;
+                
+                const totalTime = totalRoastTime; // Use metadata, not calculated
+                
+                // Calculate all roast marker times using the same method
+                const firstCrackTime = hasDuplicates 
+                    ? Math.floor((firstCrackIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (firstCrackIdx - roastStartIdx) * actualSampleRate;
+                
+                const yellowingTime = (yellowingIdx > 0 && hasDuplicates)
+                    ? Math.floor((yellowingIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (yellowingIdx > 0)
+                    ? (yellowingIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const firstCrackEndTime = (firstCrackEndIdx > 0 && hasDuplicates)
+                    ? Math.floor((firstCrackEndIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (firstCrackEndIdx > 0)
+                    ? (firstCrackEndIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const secondCrackStartTime = (secondCrackStartIdx > 0 && hasDuplicates)
+                    ? Math.floor((secondCrackStartIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (secondCrackStartIdx > 0)
+                    ? (secondCrackStartIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                const secondCrackEndTime = (secondCrackEndIdx > 0 && hasDuplicates)
+                    ? Math.floor((secondCrackEndIdx - roastStartIdx) / 2) * actualSampleRate
+                    : (secondCrackEndIdx > 0)
+                    ? (secondCrackEndIdx - roastStartIdx) * actualSampleRate
+                    : 0;
+                
+                // Build CSV
+                const csvLines = [];
+                const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '.');
+                
+                // Header
+                csvLines.push(
+                    `Date:${today}\t` +
+                    `Unit:F\t` +
+                    `CHARGE:00:00\t` +
+                    `TP:\t` +
+                    `DRYe:${yellowingTime > 0 ? formatTime(yellowingTime) : ''}\t` +
+                    `FCs:${formatTime(firstCrackTime)}\t` +
+                    `FCe:${firstCrackEndTime > 0 ? formatTime(firstCrackEndTime) : ''}\t` +
+                    `SCs:${secondCrackStartTime > 0 ? formatTime(secondCrackStartTime) : ''}\t` +
+                    `SCe:${secondCrackEndTime > 0 ? formatTime(secondCrackEndTime) : ''}\t` +
+                    `DROP:${formatTime(totalTime)}\t` +
+                    `COOL:\t` +
+                    `Time:00:00\t` +
+                    `Notes:${roastName} (roast.world ID: ${roastId})`
+                );
+                
+                // Column headers
+                csvLines.push('Time1\tTime2\tET\tBT\tEvent');
+                
+                // Data rows
+                for (let i = 0; i < numPoints; i++) {
+                    // Skip odd indices if duplicates detected
+                    if (hasDuplicates && i % 2 === 1) {
+                        continue;
+                    }
+                    
+                    // Calculate time: for duplicates, use only even indices with double step
+                    const t = hasDuplicates ? (i / 2) * actualSampleRate : i * actualSampleRate;
+                    
+                    // Average current with next if duplicates
+                    let btF, drumF;
+                    if (hasDuplicates && i + 1 < numPoints) {
+                        btF = celsiusToFahrenheit((btArray[i] + btArray[i + 1]) / 2);
+                        drumF = celsiusToFahrenheit((drumArray[i] + drumArray[i + 1]) / 2);
+                    } else {
+                        btF = celsiusToFahrenheit(btArray[i]);
+                        drumF = celsiusToFahrenheit(drumArray[i]);
+                    }
+                    
+                    const timeStr = formatTime(t);
+                    
+                    let event = '';
+                    if (i === 0) {
+                        event = 'Charge';
+                    } else if (yellowingTime > 0 && Math.abs(t - yellowingTime) < 1.5) {
+                        event = 'DRYe';
+                    } else if (firstCrackTime > 0 && Math.abs(t - firstCrackTime) < 1.5) {
+                        event = 'FCs';
+                    } else if (firstCrackEndTime > 0 && Math.abs(t - firstCrackEndTime) < 1.5) {
+                        event = 'FCe';
+                    } else if (secondCrackStartTime > 0 && Math.abs(t - secondCrackStartTime) < 1.5) {
+                        event = 'SCs';
+                    } else if (secondCrackEndTime > 0 && Math.abs(t - secondCrackEndTime) < 1.5) {
+                        event = 'SCe';
+                    } else if (Math.abs(t - totalTime) < 1.5) {
+                        event = 'Drop';
+                    }
+                    
+                    // Default: ET=Bean, BT=Drum (inverted from roast.world)
+                    // If checkbox is checked, use original: ET=Drum, BT=Bean
+                    const etTemp = swapTemps ? btF : drumF;
+                    const btTemp = swapTemps ? drumF : btF;
+                    
+                    csvLines.push(`${timeStr}\t${timeStr}\t${etTemp.toFixed(1)}\t${btTemp.toFixed(1)}\t${event}`);
+                }
+                
+                const csvContent = csvLines.join('\n');
+                
+                // Generate filename and download based on selected format
+                const outputFormat = document.getElementById('outputFormat').value;
+                const safeName = roastName.replace(/[^a-zA-Z0-9_-]/g, '_');
+                
+                if (outputFormat === 'alog') {
+                    // Build deduplicated, mapped ET/BT arrays in Fahrenheit
+                    // (same skip-odd + average logic as the CSV output)
+                    const etOut = [];
+                    const btOut = [];
+                    for (let i = 0; i < numPoints; i++) {
+                        if (hasDuplicates && i % 2 === 1) continue;
+                        
+                        let btF, drumF;
+                        if (hasDuplicates && i + 1 < numPoints) {
+                            btF = celsiusToFahrenheit((btArray[i] + btArray[i + 1]) / 2);
+                            drumF = celsiusToFahrenheit((drumArray[i] + drumArray[i + 1]) / 2);
+                        } else {
+                            btF = celsiusToFahrenheit(btArray[i]);
+                            drumF = celsiusToFahrenheit(drumArray[i]);
+                        }
+                        
+                        etOut.push(swapTemps ? btF : drumF);
+                        btOut.push(swapTemps ? drumF : btF);
+                    }
+                    
+                    const alogContent = generateALOG(
+                        roastData, roastId, etOut, btOut, actualSampleRate, etOut.length,
+                        yellowingTime, firstCrackTime, firstCrackEndTime,
+                        secondCrackStartTime, secondCrackEndTime, totalTime
+                    );
+                    
+                    const filename = `${safeName}_${roastId.substring(0, 8)}.alog`;
+                    const blob = new Blob([alogContent], { type: 'text/plain;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', filename);
+                    link.style.visibility = 'hidden';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    const filename = `${safeName}_${roastId.substring(0, 8)}.csv`;
+                    downloadCSV(csvContent, filename);
+                }
+                
+                // Show success
+                const weightLoss = ((weightIn - weightOut) / weightIn * 100).toFixed(1);
+                const roastInfo = `
+                    <div class="roast-info">
+                        <strong>${roastName}</strong><br>
+                        Duration: ${formatTime(totalTime)} (${Math.floor(totalTime)}s)<br>
+                        ${yellowingTime > 0 ? `Yellowing: ${formatTime(yellowingTime)}<br>` : ''}
+                        First Crack: ${formatTime(firstCrackTime)}${firstCrackEndTime > 0 ? ` - ${formatTime(firstCrackEndTime)}` : ''}<br>
+                        ${secondCrackStartTime > 0 ? `Second Crack: ${formatTime(secondCrackStartTime)}${secondCrackEndTime > 0 ? ` - ${formatTime(secondCrackEndTime)}` : ''}<br>` : ''}
+                        Weight: ${weightIn}g → ${weightOut}g (${weightLoss}% loss)<br>
+                        Sample Rate: ${actualSampleRate.toFixed(2)}s<br>
+                        Total Points: ${hasDuplicates ? Math.ceil(numPoints / 2) : numPoints}${hasDuplicates ? ' (duplicates removed)' : ''}<br>
+                        Format: ${outputFormat.toUpperCase()}<br>
+                        Smoothing: ${smoothingMode === 'none' ? 'None' : smoothingMode.replace('ema-', 'EMA ').replace('light', 'Light').replace('medium', 'Medium').replace('xheavy', 'Extra Heavy').replace('heavy', 'Heavy')}<br>
+                        ${swapTemps ? 'Mapping: ET=Drum, BT=Bean' : 'Mapping: ET=Bean, BT=Drum (default)'}
+                    </div>
+                `;
+                
+                const displayFilename = `${safeName}_${roastId.substring(0, 8)}.${outputFormat}`;
+                showStatus(`✓ Successfully converted! File downloaded as: <strong>${displayFilename}</strong>`, 'success', roastInfo);
+                
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                convertBtn.disabled = false;
+            }
+        }
+        
+        // Allow Enter key to convert
+        document.getElementById('roastInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertRoast();
+            }
+        });
+        
+        // Newsletter form handler
+        async function handleNewsletterSubmit(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('newsletterForm');
+            const email = document.getElementById('newsletterEmail').value;
+            const statusDiv = document.getElementById('newsletterStatus');
+            const submitBtn = document.getElementById('newsletterBtn');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Subscribing...';
+            statusDiv.className = 'newsletter-status loading';
+            statusDiv.textContent = 'Processing...';
+            
+            try {
+                // Submit to MailerLite
+                const formData = new FormData();
+                formData.append('fields[email]', email);
+                formData.append('ml-submit', '1');
+                formData.append('anticsrf', 'true');
+                
+                const response = await fetch('https://assets.mailerlite.com/jsonp/2015844/forms/175633197006062847/subscribe', {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' // MailerLite doesn't support CORS, but submission still works
+                });
+                
+                // Since we're using no-cors, we can't read the response
+                // But if we got here, the request was sent successfully
+                statusDiv.className = 'newsletter-status success';
+                statusDiv.textContent = '✓ Thank you for subscribing! Check your email to confirm.';
+                
+                // Clear the form
+                form.reset();
+                
+                // Reset button after delay
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Subscribe';
+                }, 3000);
+                
+            } catch (error) {
+                statusDiv.className = 'newsletter-status error';
+                statusDiv.textContent = '✗ Something went wrong. Please try again.';
+                
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Subscribe';
+            }
+            
+            return false;
+        }
+    </script>
+</body>
+</html>
